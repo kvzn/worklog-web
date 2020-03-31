@@ -3,10 +3,7 @@
     <div class="container-fluid">
       <div class="row">
         <div class="col-12 py-3 d-flex flex-row justify-content-between">
-          <h3>我的日志</h3>
-          <router-link to="/worklogs/create">
-            <button class="btn btn-success px-4">撰写</button>
-          </router-link>
+          <h3>全部日志</h3>
         </div>
       </div>
       <b-overlay :show="showOverlay" rounded="lg">
@@ -17,6 +14,7 @@
           <div class="col-12">
             <table class="table table-bordered">
               <thead>
+                <th>用户</th>
                 <th>日期</th>
                 <th>工作内容</th>
                 <th>工作进展</th>
@@ -31,6 +29,9 @@
                     v-for="(item, index) in log.items"
                     v-bind:key="log.id + index"
                   >
+                    <th v-if="index==0" :rowspan="log.items.length">
+                      <h4>{{log.creator.name}}</h4>
+                    </th>
                     <th v-if="index==0" :rowspan="log.items.length">
                       <h4>{{log.date}}</h4>
                     </th>
@@ -80,14 +81,13 @@
 
 <script>
 import { mapGetters } from "vuex";
-import * as config from "../../config";
+import * as config from "../../../config";
 import * as moment from "moment";
 import axios from "axios";
-import { EventBus } from "../event-bus.js";
-import { store } from "../store";
+import { store } from "../../store";
 
 export default {
-  name: "WorklogList",
+  name: "AdminWorklogList",
   data() {
     return {
       logs: [],
@@ -98,21 +98,13 @@ export default {
     };
   },
   created() {
-    let self = this;
-
     this.load();
-    this.checkIsTodayWritten();
-
-    EventBus.$on("licenses-created", () => {
-      self.load();
-    });
   },
   computed: {
     ...mapGetters({
       user: "getUser",
       isAdmin: "isAdmin",
-      isLoggedIn: "isLoggedIn",
-      isTodaysLogWritten: "isTodaysLogWritten"
+      isLoggedIn: "isLoggedIn"
     }),
     dateOfToday() {
       const d = moment
@@ -129,7 +121,6 @@ export default {
   },
   methods: {
     refresh() {
-      EventBus.$emit("reload-daysales");
       this.load();
     },
     formatDate(date) {
@@ -149,7 +140,7 @@ export default {
 
       self.showOverlay = true;
 
-      const url = `${config.server}/worklogs`;
+      const url = `${config.server}/admin/worklogs`;
 
       axios
         .get(url, {
@@ -168,25 +159,6 @@ export default {
         })
         .finally(() => {
           self.showOverlay = false;
-        });
-    },
-    checkIsTodayWritten() {
-      let self = this;
-
-      self.$http
-        .get(`/worklogs/isTodayWritten`)
-        .then(response => {
-          if (response.status === 200) {
-            store.commit("setTodaysLogWritten", response.data == true);
-          } else {
-            self.$notify({ group: "main", type: "error", text: response.data });
-          }
-        })
-        .catch(function(error) {
-          self.$notify({ group: "main", type: "error", text: error });
-        })
-        .finally(() => {
-          self.$store.commit("setShowLoading", false);
         });
     },
     removeLog(id) {
@@ -210,7 +182,7 @@ export default {
               text: "Successful!"
             });
             self.load();
-            store.commit('setTodaysLogWritten', false);
+            store.commit("setTodaysLogWritten", false);
           } else {
             self.$notify({ group: "main", type: "error", text: resp.data });
           }
@@ -226,21 +198,4 @@ export default {
 };
 </script>
 <style lang="scss" scoped>
-.license-key {
-  font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
-  font-weight: 600;
-  font-size: 18px;
-}
-
-.address-field {
-  height: 50px;
-}
-
-.webhook-flag {
-  background-image: url(../assets/webhook.svg);
-  width: 16px;
-  height: 16px;
-  filter: invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg)
-    brightness(104%) contrast(97%);
-}
 </style>

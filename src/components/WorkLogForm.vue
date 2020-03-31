@@ -1,67 +1,99 @@
 <template>
-  <div class="container bg-white p-2 p-sm-5">
-    <div class="row justify-content-md-center">
-      <div class="col-12">
-        <h2 class="my-3 font-weight-bold">今日日志</h2>
-        <form action method="post" enctype="multipart/form-data">
-          <div class="row">
-            <div class="form-group col-12 col-sm-6">
-              <label>① 工作内容:</label>
-              <textarea
-                name="field"
-                class="form-control"
-                rows="8"
-                minlength="10"
-                maxlength="500"
-                required
-                v-model="field"
-              ></textarea>
+  <div class="bg-white m-1 m-sm-2 m-md-4 p-1 p-sm-2 p-md-4">
+    <div class="container-fluid">
+      <div class="row justify-content-md-center">
+        <div class="col-12">
+          <h2 class="my-3 font-weight-bold">今日日志</h2>
+          <b-overlay :show="showOverlay" rounded="lg">
+            <form action method="post" enctype="multipart/form-data">
+              <table class="table">
+                <thead>
+                  <th>#</th>
+                  <th>工作内容</th>
+                  <th>进展</th>
+                  <th>遇到的问题</th>
+                  <th>后续计划</th>
+                  <th></th>
+                </thead>
+                <tbody>
+                  <tr v-for="(item, index) in items" :key="index">
+                    <td>
+                      <span>{{index+1}}</span>
+                    </td>
+                    <td>
+                      <textarea
+                        class="form-control"
+                        rows="3"
+                        minlength="10"
+                        maxlength="500"
+                        required
+                        v-model="item[0]"
+                      ></textarea>
+                    </td>
+                    <td>
+                      <textarea
+                        class="form-control"
+                        rows="3"
+                        minlength="10"
+                        maxlength="500"
+                        required
+                        v-model="item[1]"
+                      ></textarea>
+                    </td>
+                    <td>
+                      <textarea
+                        class="form-control"
+                        rows="3"
+                        minlength="10"
+                        maxlength="500"
+                        required
+                        v-model="item[2]"
+                      ></textarea>
+                    </td>
+                    <td>
+                      <textarea
+                        class="form-control"
+                        rows="3"
+                        minlength="10"
+                        maxlength="500"
+                        required
+                        v-model="item[3]"
+                      ></textarea>
+                    </td>
+                    <td>
+                      <button
+                        class="btn btn-default btn-sm"
+                        v-on:click.stop.prevent="removeItem(index)"
+                      >
+                        <octicon name="x"></octicon>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </form>
+            <div class="row">
+              <div class="col-12 d-flex flex-row justify-content-between">
+                <button
+                  type="submit"
+                  class="btn btn-secondary mr-4"
+                  v-on:click.stop.prevent="addItem"
+                >增加</button>
+                <button
+                  type="submit"
+                  class="btn btn-success px-5"
+                  v-on:click.stop.prevent="submit()"
+                  v-bind:disabled="isSubmitting"
+                >
+                  <span v-if="isSubmitting">
+                    <b-spinner small class="mr-2"></b-spinner>提交中...
+                  </span>
+                  <span v-else>提交</span>
+                </button>
+              </div>
             </div>
-            <div class="form-group col-12 col-sm-6">
-              <label>② 工作进展:</label>
-              <textarea
-                name="field"
-                class="form-control"
-                rows="8"
-                minlength="10"
-                maxlength="500"
-                required
-                v-model="field"
-              ></textarea>
-            </div>
-            <div class="form-group col-12 col-sm-6">
-              <label>③ 遇到的问题:</label>
-              <textarea
-                name="field"
-                class="form-control"
-                rows="8"
-                minlength="10"
-                maxlength="500"
-                required
-              ></textarea>
-            </div>
-            <div class="form-group col-12 col-sm-6">
-              <label>④ 后续计划:</label>
-              <textarea
-                name="field"
-                class="form-control"
-                rows="8"
-                minlength="10"
-                maxlength="500"
-                required
-              ></textarea>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-12 d-flex flex-row justify-content-end">
-              <button
-                type="submit"
-                class="btn btn-primary px-5"
-                v-on:click.stop.prevent="submit()"
-              >提交</button>
-            </div>
-          </div>
-        </form>
+          </b-overlay>
+        </div>
       </div>
     </div>
   </div>
@@ -69,56 +101,72 @@
 
 <script>
 export default {
-  name: "WorkLogForm",
+  name: "WorklogForm",
   data() {
     return {
-      scriptId: this.$route.params.id,
-      script: {
-        field: null
-      }
+      worklogId: this.$route.params.id,
+      items: [],
+      isSubmitting: false,
+      showOverlay: false
     };
   },
   created() {
-    if (this.scriptId) {
-      this.getScript(this.scriptId);
+    this.addItem();
+    this.addItem();
+    if (this.worklogId) {
+      this.load(this.worklogId);
     }
   },
   methods: {
-    getScript(id) {
+    load(id) {
       const self = this;
 
-      self.$store.commit("setShowLoading", true);
+      self.showOverlay = true;
 
       self.$http
-        .get(`/scripts/${id}`)
+        .get(`/worklogs/${id}`)
         .then(function(response) {
-          self.script = response.data;
-          self.script.fitScreenSizes = self.script.fitScreenSizes.split(",");
+          self.items = response.data.items;
         })
         .catch(function(error) {
           self.$notify({ group: "main", type: "error", text: error });
         })
         .finally(() => {
-          self.$store.commit("setShowLoading", false);
+          self.showOverlay = false;
         });
     },
     submit() {
       const self = this;
 
-      self.$store.commit("setShowLoading", true);
+      const items_ = self.items
+        .filter(item => {
+          return item.length != 0 && item.some(it => !!it && it != "");
+        })
+        .map(item => item.map(it => (it != null ? it : "")));
+
+      const allBlanks = items_.every(item => item.every(it => !it));
+      if (allBlanks) {
+        self.$notify({ group: "main", type: "error", text: "无效输入" });
+        return;
+      }
+
+      self.isSubmitting = true;
 
       let process = null;
-      if (self.scriptId) {
-        process = self.$http.put(`/scripts/${self.scriptId}`, self.script);
+      if (self.worklogId) {
+        process = self.$http.put(`/worklogs/${self.worklogId}`, {
+          items: items_
+        });
       } else {
-        process = self.$http.post(`/scripts`, self.script);
+        process = self.$http.post(`/worklogs`, {
+          items: items_
+        });
       }
 
       process
         .then(function(response) {
-          var respObj = response.data;
-          if (respObj.status == "success") {
-            self.$router.push({ path: "/scripts" });
+          if (response.status == 200) {
+            self.$router.push({ path: "/worklogs/list" });
             self.$notify({
               group: "main",
               type: "success",
@@ -128,7 +176,7 @@ export default {
             self.$notify({
               group: "main",
               type: "error",
-              text: respObj.payload
+              text: response.payload
             });
           }
         })
@@ -136,14 +184,22 @@ export default {
           self.$notify({ group: "main", type: "error", text: error });
         })
         .finally(() => {
-          self.$store.commit("setShowLoading", false);
+          self.isSubmitting = false;
         });
+    },
+    removeItem(index) {
+      this.items.splice(index, 1);
+      if (this.items.length === 0) {
+        this.items.push([]);
+      }
+    },
+    addItem() {
+      this.items.push(["", "", "", ""]);
     }
   }
 };
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style lang="scss" scoped>
 </style>
 

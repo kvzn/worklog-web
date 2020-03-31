@@ -8,8 +8,10 @@ import Vuex from 'vuex'
 import VeeValidate from 'vee-validate';
 import { store } from './store/index';
 import * as axios from 'axios';
-import 'vue-octicon/icons/gear'
-import './style.scss'
+import 'vue-octicon/icons/gear';
+import 'vue-octicon/icons/x';
+import 'vue-octicon/icons/primitive-dot';
+import './style.scss';
 
 Vue.config.productionTip = false;
 
@@ -48,29 +50,28 @@ axios.interceptors.request.use(
   }
 );
 
-axios.interceptors.response.use(
-  response => {
-    return response;
-  },
-  error => {
-    if (error.response) {
-      switch (error.response.status) {
-        case 400:
-        case 401:
-        case 403: {
-          Vue.notify({
-            group: 'main',
-            type: 'error',
-            text: error.response.data.message
-          });
-          store.commit("setShowLoading", false);
-          return new Promise(() => { });
-        }
-      }
-    }
-    return Promise.reject(error);
-  }
-);
+// axios.interceptors.response.use(
+//   response => {
+//     return response;
+//   },
+//   error => {
+//     if (error.response) {
+//       switch (error.response.status) {
+//         case 400:
+//         case 401:
+//         case 403: {
+//           Vue.notify({
+//             group: 'main',
+//             type: 'error',
+//             text: error.response.data
+//           });
+//           return new Promise(() => { });
+//         }
+//       }
+//     }
+//     return Promise.reject(error);
+//   }
+// );
 
 Vue.prototype.$http = axios;
 

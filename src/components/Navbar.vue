@@ -1,34 +1,44 @@
 <template>
-  <b-navbar toggleable="lg" type="dark" class="navbar navbar-expand-sm navbar-dark bg-dark">
+  <div toggleable="lg" type="dark" class="navbar navbar-expand-sm navbar-dark bg-dark">
     <div class="container-fluid">
       <router-link class="navbar-brand" to="/">工作日志</router-link>
       <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
 
       <b-collapse id="nav-collapse" is-nav>
         <b-navbar-nav>
-          <li
-            class="nav-item"
-            v-bind:class="{active: $route.path==='/' || $route.path==='/worklogs/view'}"
-          >
-            <router-link class="nav-link" to="/">查看</router-link>
-          </li>
-          <li class="nav-item" v-bind:class="{active: $route.path==='/worklogs/create'}">
-            <router-link class="nav-link" to="/worklogs/create">撰写</router-link>
-          </li>
+          <template v-if="isLoggedIn">
+            <li
+              class="nav-item"
+              v-bind:class="{active: $route.path==='/' || $route.path==='/worklogs/list'}"
+            >
+              <router-link class="nav-link" to="/">我的日志</router-link>
+            </li>
+
+            <li
+              v-if="isAdmin"
+              class="nav-item"
+              v-bind:class="{active: $route.path==='/' || $route.path==='/admin/worklogs/list'}"
+            >
+              <router-link class="nav-link" to="admin/worklogs/list">全部日志</router-link>
+            </li>
+          </template>
         </b-navbar-nav>
         <b-navbar-nav class="ml-auto">
+          <b-nav-item-dropdown v-if="isAdmin" text="管理" right>
+            <b-dropdown-item href="/#/admin/users/list">用户</b-dropdown-item>
+          </b-nav-item-dropdown>
           <template v-if="!isLoggedIn">
-            <li class="nav-item" v-bind:class="{active: $route.path==='/register'}">
-              <router-link class="nav-link" to="/register">Register</router-link>
-            </li>
             <li class="nav-item" v-bind:class="{active: $route.path==='/login'}">
-              <router-link class="nav-link" to="/login">Login</router-link>
+              <router-link class="nav-link" to="/login">登录</router-link>
             </li>
           </template>
           <b-nav-item-dropdown v-bind:text="user.name" right v-else>
-            <b-dropdown-item to="/user/changePassword">Change Password</b-dropdown-item>
+            <template slot="button-content">
+              <b-avatar size="30"></b-avatar>
+            </template>
+            <b-dropdown-item to="/user/changePassword">修改密码</b-dropdown-item>
             <b-dropdown-divider></b-dropdown-divider>
-            <b-dropdown-item v-on:click="logout()">Logout</b-dropdown-item>
+            <b-dropdown-item v-on:click="logout()">登出</b-dropdown-item>
           </b-nav-item-dropdown>
         </b-navbar-nav>
       </b-collapse>
@@ -67,15 +77,12 @@
         >Submit</button>
       </form>
     </b-modal>
-  </b-navbar>
+  </div>
 </template>
 
 <script>
 import { mapGetters } from "vuex";
 import { authService } from "../service";
-import * as config from "../../config";
-import axios from "axios";
-import { EventBus } from "../event-bus.js";
 
 export default {
   name: "Navbar",
@@ -89,42 +96,12 @@ export default {
     ...mapGetters({
       user: "getUser",
       isAdmin: "isAdmin",
-      isSuperAdmin: "isSuperAdmin",
       isLoggedIn: "isLoggedIn"
     })
   },
   methods: {
     logout() {
       authService.logout();
-    },
-    resetCreateLicensesData() {
-      this.validity = 12;
-      this.count = 1;
-    },
-    createLicenses() {
-      let self = this;
-
-      self.$store.commit("setShowLoading", true);
-
-      const url = `${config.server}/licenses`;
-
-      axios
-        .post(url, {
-          validity: +this.validity,
-          count: +this.count
-        })
-        .then(() => {
-          self.resetCreateLicensesData();
-          self.$bvModal.hide("modal-create-licenses");
-          self.$notify({ group: "main", type: "success", text: "Successful!" });
-          EventBus.$emit("licenses-created", this.clickCount);
-        })
-        .catch(function(error) {
-          self.$notify({ group: "main", type: "error", text: error });
-        })
-        .finally(() => {
-          self.$store.commit("setShowLoading", false);
-        });
     }
   }
 };

@@ -1,6 +1,6 @@
 <template>
   <div class="d-flex flex-row justify-content-center">
-    <div class="text-secondary">©️2020 涌现科技</div>
+    <div class="text-secondary">©️2020 Springup</div>
   </div>
 </template>
 
