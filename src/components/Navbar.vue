@@ -1,7 +1,10 @@
 <template>
   <div toggleable="lg" type="dark" class="navbar navbar-expand-sm navbar-dark bg-dark">
     <div class="container-fluid">
-      <router-link class="navbar-brand" to="/">工作日志</router-link>
+      <router-link class="navbar-brand d-flex flex-row align-items-center" to="/">
+        <img src="../assets/logo.png" alt class="logo mr-2" />
+        工作日志
+      </router-link>
       <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
 
       <b-collapse id="nav-collapse" is-nav>
@@ -19,7 +22,7 @@
               class="nav-item"
               v-bind:class="{active: $route.path==='/' || $route.path==='/admin/worklogs/list'}"
             >
-              <router-link class="nav-link" to="admin/worklogs/list">全部日志</router-link>
+              <router-link class="nav-link" to="/admin/worklogs/list">全部日志</router-link>
             </li>
           </template>
         </b-navbar-nav>
@@ -111,6 +114,11 @@ export default {
 <style lang="scss" scoped>
 .navbar {
   background: #0a0b0d;
+
+  .logo {
+    width: 30px;
+    height: 30px;
+  }
 }
 </style>
 

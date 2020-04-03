@@ -32,13 +32,13 @@
                     v-bind:key="log.id + index"
                   >
                     <th v-if="index==0" :rowspan="log.items.length">
-                      <h4>{{log.date}}</h4>
+                      <span class="text-nowrap">{{log.date}}</span>
                     </th>
 
-                    <td>{{item[0]}}</td>
-                    <td>{{item[1]}}</td>
-                    <td>{{item[2]}}</td>
-                    <td>{{item[3]}}</td>
+                    <td class="align-top">{{item[0]}}</td>
+                    <td class="align-top">{{item[1]}}</td>
+                    <td class="align-top">{{item[2]}}</td>
+                    <td class="align-top">{{item[3]}}</td>
 
                     <td v-if="index==0" :rowspan="log.items.length">
                       <div class="d-flex flex-row justify-content-center">
@@ -160,7 +160,7 @@ export default {
         })
         .then(resp => {
           const { data } = resp;
-          self.logs = data;
+          self.logs = data ? data.reverse() : [];
           self.total = self.logs.length;
         })
         .catch(function(error) {
@@ -226,21 +226,4 @@ export default {
 };
 </script>
 <style lang="scss" scoped>
-.license-key {
-  font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
-  font-weight: 600;
-  font-size: 18px;
-}
-
-.address-field {
-  height: 50px;
-}
-
-.webhook-flag {
-  background-image: url(../assets/webhook.svg);
-  width: 16px;
-  height: 16px;
-  filter: invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg)
-    brightness(104%) contrast(97%);
-}
 </style>

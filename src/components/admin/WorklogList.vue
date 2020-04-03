@@ -30,16 +30,16 @@
                     v-bind:key="log.id + index"
                   >
                     <th v-if="index==0" :rowspan="log.items.length">
-                      <h4>{{log.creator.name}}</h4>
+                      <span class="text-nowrap">{{log.creator.name}}</span>
                     </th>
                     <th v-if="index==0" :rowspan="log.items.length">
-                      <h4>{{log.date}}</h4>
+                      <span class="text-nowrap">{{log.date}}</span>
                     </th>
 
-                    <td>{{item[0]}}</td>
-                    <td>{{item[1]}}</td>
-                    <td>{{item[2]}}</td>
-                    <td>{{item[3]}}</td>
+                    <td class="align-top">{{item[0]}}</td>
+                    <td class="align-top">{{item[1]}}</td>
+                    <td class="align-top">{{item[2]}}</td>
+                    <td class="align-top">{{item[3]}}</td>
 
                     <td v-if="index==0" :rowspan="log.items.length">
                       <div class="d-flex flex-row justify-content-center">
@@ -151,7 +151,7 @@ export default {
         })
         .then(resp => {
           const { data } = resp;
-          self.logs = data;
+          self.logs = data ? data.reverse() : [];
           self.total = self.logs.length;
         })
         .catch(function(error) {
