@@ -15,12 +15,12 @@
             <table class="table table-bordered">
               <thead>
                 <th>#</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Roles</th>
-                <th>Enabled</th>
-                <th>Created At</th>
-                <th>Updated At</th>
+                <th>姓名</th>
+                <th>邮箱</th>
+                <th>角色</th>
+                <th>启用</th>
+                <th>创建</th>
+                <th>更新</th>
                 <th></th>
               </thead>
               <tbody>
@@ -46,12 +46,15 @@
                         <template slot="button-content">
                           <octicon name="gear"></octicon>
                         </template>
-                        <b-dropdown-item>Edit</b-dropdown-item>
+                        <b-dropdown-item @click="selectedUser=user; showEditModal=true">编辑</b-dropdown-item>
                         <template v-if="users.length>1">
                           <b-dropdown-divider></b-dropdown-divider>
-                          <b-dropdown-item>Lock</b-dropdown-item>
+                          <b-dropdown-item v-on:click.stop.prevent="lockUser(user.id)">
+                            <span v-if="user.enabled" class="text-danger">锁定</span>
+                            <span v-else class="text-danger">解锁</span>
+                          </b-dropdown-item>
                           <b-dropdown-item v-on:click.stop.prevent="removeUser(user.id)">
-                            <span class="text-danger">Delete</span>
+                            <span class="text-danger">删除</span>
                           </b-dropdown-item>
                         </template>
                       </b-dropdown>
@@ -75,6 +78,28 @@
         </div>
       </b-overlay>
     </div>
+
+    <b-modal id="modal-update-user" title="编辑用户" v-model="showEditModal">
+      <form action>
+        <div class="form-group">
+          <label for="roles">角色</label>
+          <template v-if="selectedUser">
+            <b-form-checkbox v-model="selectedUser.roles" value="USER" unchecked-value="null">用户</b-form-checkbox>
+            <b-form-checkbox v-model="selectedUser.roles" value="ADMIN" unchecked-value="null">管理员</b-form-checkbox>
+          </template>
+        </div>
+      </form>
+
+      <template v-slot:modal-footer="{ isSubmitting }">
+        <b-button variant="light" @click="showEditModal = false">取消</b-button>
+        <b-button variant="success" v-bind:disabled="isSubmitting" @click="submitEditing()">
+          <span v-if="isSubmitting">
+            <b-spinner small class="mr-2"></b-spinner>提交中...
+          </span>
+          <span v-else>确定</span>
+        </b-button>
+      </template>
+    </b-modal>
   </div>
 </template>
 
@@ -92,7 +117,9 @@ export default {
       total: 0,
       perPage: 50,
       currentPage: 1,
-      showOverlay: true
+      showOverlay: true,
+      showEditModal: false,
+      selectedUser: null
     };
   },
   created() {
@@ -146,7 +173,11 @@ export default {
           self.total = self.users.length;
         })
         .catch(error => {
-          self.$notify({ group: "main", type: "error", text: error.response.data });
+          self.$notify({
+            group: "main",
+            type: "error",
+            text: error.response.data
+          });
         })
         .finally(() => {
           self.showOverlay = false;
@@ -155,7 +186,7 @@ export default {
     removeUser(id) {
       let self = this;
 
-      if (!confirm("Are you sure to delete?")) {
+      if (!confirm("Are you sure to delete this user?")) {
         return;
       }
 
@@ -183,6 +214,72 @@ export default {
         })
         .finally(() => {
           self.$store.commit("setShowLoading", false);
+        });
+    },
+    lockUser(id) {
+      let self = this;
+
+      if (!confirm("Are you sure to lock this user?")) {
+        return;
+      }
+
+      self.$store.commit("setShowLoading", true);
+
+      const url = `${config.server}/admin/users/${id}/lock`;
+
+      axios
+        .put(url)
+        .then(resp => {
+          console.log(resp);
+          if (resp.status === 200) {
+            self.$notify({
+              group: "main",
+              type: "success",
+              text: "Successful!"
+            });
+            self.load();
+          } else {
+            self.$notify({ group: "main", type: "error", text: resp.data });
+          }
+        })
+        .catch(function(error) {
+          self.$notify({ group: "main", type: "error", text: error });
+        })
+        .finally(() => {
+          self.$store.commit("setShowLoading", false);
+        });
+    },
+    submitEditing() {
+      const self = this;
+
+      self.isSubmitting = true;
+
+      self.$http
+        .put(`/admin/users/${self.selectedUser.id}/roles`, {
+          roles: self.selectedUser.roles
+        })
+        .then(function(response) {
+          if (response.status == 200) {
+            self.showEditModal = false;
+            self.load();
+            self.$notify({
+              group: "main",
+              type: "success",
+              text: "Successful!"
+            });
+          } else {
+            self.$notify({
+              group: "main",
+              type: "error",
+              text: response.data
+            });
+          }
+        })
+        .catch(function(error) {
+          self.$notify({ group: "main", type: "error", text: error });
+        })
+        .finally(() => {
+          self.isSubmitting = false;
         });
     }
   }
